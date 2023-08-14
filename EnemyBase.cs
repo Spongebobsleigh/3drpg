@@ -1,12 +1,13 @@
-using UnityEngine;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class EnemyBase : MonoBehaviour
 {
     // ----------------------------------------------------------
     /// <summary>
-    /// ƒXƒe[ƒ^ƒX.
+    /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     /// </summary>
     // ----------------------------------------------------------
     [System.Serializable]
@@ -14,57 +15,77 @@ public class EnemyBase : MonoBehaviour
     {
         // HP.
         public int Hp = 10;
-        // UŒ‚—Í.
+        // æ”»æ’ƒåŠ›.
         public int Power = 1;
     }
 
-    // Šî–{ƒXƒe[ƒ^ƒX.
+    // åŸºæœ¬ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     [SerializeField] Status DefaultStatus = new Status();
-    // Œ»İ‚ÌƒXƒe[ƒ^ƒX.
+    // ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     public Status CurrentStatus = new Status();
 
-    // ƒAƒjƒ[ƒ^[.
+    // ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚¿ãƒ¼.
     Animator animator = null;
 
-    // ü•ÓƒŒ[ƒ_[ƒRƒ‰ƒCƒ_[ƒR[ƒ‹.
+    // å‘¨è¾ºãƒ¬ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚³ãƒ¼ãƒ«.
     [SerializeField] ColliderCallReceiver aroundColliderCall = null;
 
-    // UŒ‚ŠÔŠu.
+    //! è‡ªèº«ã®ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼.
+    [SerializeField] Collider myCollider = null;
+    //! æ”»æ’ƒãƒ’ãƒƒãƒˆæ™‚ã‚¨ãƒ•ã‚§ã‚¯ãƒˆãƒ—ãƒ¬ãƒãƒ–.
+    [SerializeField] GameObject hitParticlePrefab = null;
+
+    // æ”»æ’ƒé–“éš”.
     [SerializeField] float attackInterval = 3f;
-    // UŒ‚ó‘Ôƒtƒ‰ƒO.
-    bool isBattle = false;
-    // UŒ‚ŠÔŒv‘ª—p.
+
+    // æ”»æ’ƒçŠ¶æ…‹ãƒ•ãƒ©ã‚°.
+    public bool IsBattle = false;
+    // æ”»æ’ƒæ™‚é–“è¨ˆæ¸¬ç”¨.
     float attackTimer = 0f;
 
-    //! UŒ‚”»’è—pƒRƒ‰ƒCƒ_[ƒR[ƒ‹.
+    //! æ”»æ’ƒåˆ¤å®šç”¨ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚³ãƒ¼ãƒ«.
     [SerializeField] ColliderCallReceiver attackHitColliderCall = null;
 
-    //! ©g‚ÌƒRƒ‰ƒCƒ_[.
-    [SerializeField] Collider myCollider = null;
-    //! UŒ‚ƒqƒbƒgƒGƒtƒFƒNƒgƒvƒŒƒnƒu.
-    [SerializeField] GameObject hitParticlePrefab = null;
+    // é–‹å§‹æ™‚ä½ç½®.
+    Vector3 startPosition = new Vector3();
+    // é–‹å§‹æ™‚è§’åº¦.
+    Quaternion startRotation = new Quaternion();
+
+    //! HPãƒãƒ¼ã®ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼.
+    [SerializeField] Slider hpBar = null;
 
     void Start()
     {
-        // Animator‚ğæ“¾‚µ•ÛŠÇ.
+        // Animatorã‚’å–å¾—ã—ä¿ç®¡.
         animator = GetComponent<Animator>();
-        // Å‰‚ÉŒ»İ‚ÌƒXƒe[ƒ^ƒX‚ğŠî–{ƒXƒe[ƒ^ƒX‚Æ‚µ‚Äİ’è.
+
+        // æœ€åˆã«ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’åŸºæœ¬ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¨ã—ã¦è¨­å®š.
         CurrentStatus.Hp = DefaultStatus.Hp;
         CurrentStatus.Power = DefaultStatus.Power;
-        // ü•ÓƒRƒ‰ƒCƒ_[ƒCƒxƒ“ƒg“o˜^.
+
+        // å‘¨è¾ºã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ².
         aroundColliderCall.TriggerEnterEvent.AddListener(OnAroundTriggerEnter);
         aroundColliderCall.TriggerStayEvent.AddListener(OnAroundTriggerStay);
         aroundColliderCall.TriggerExitEvent.AddListener(OnAroundTriggerExit);
-        // UŒ‚ƒRƒ‰ƒCƒ_[ƒCƒxƒ“ƒg“o˜^.
+
+        // æ”»æ’ƒã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ².
         attackHitColliderCall.TriggerEnterEvent.AddListener(OnAttackTriggerEnter);
 
         attackHitColliderCall.gameObject.SetActive(false);
+
+        // é–‹å§‹æ™‚ã®ä½ç½®å›è»¢ã‚’ä¿ç®¡.
+        startPosition = this.transform.position;
+        startRotation = this.transform.rotation;
+
+        // ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼ã‚’åˆæœŸåŒ–.
+        hpBar.maxValue = DefaultStatus.Hp;
+        hpBar.value = CurrentStatus.Hp;
     }
 
     void Update()
     {
-        // UŒ‚‚Å‚«‚éó‘Ô‚Ì.
-        if (isBattle == true)
+        // æ”»æ’ƒã§ãã‚‹çŠ¶æ…‹ã®æ™‚.
+        if (IsBattle == true)
         {
             attackTimer += Time.deltaTime;
 
@@ -80,77 +101,17 @@ public class EnemyBase : MonoBehaviour
         }
     }
 
-    // ------------------------------------------------------------
-    /// <summary>
-    /// ü•ÓƒŒ[ƒ_[ƒRƒ‰ƒCƒ_[ƒGƒ“ƒ^[ƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    /// <param name="other"> Ú‹ßƒRƒ‰ƒCƒ_[. </param>
-    // ------------------------------------------------------------
-    void OnAroundTriggerEnter(Collider other)
-    {
-        if (other.gameObject.tag == "Player")
-        {
-            isBattle = true;
-        }
-    }
-
-    
-
-    // ------------------------------------------------------------
-    /// <summary>
-    /// ü•ÓƒŒ[ƒ_[ƒRƒ‰ƒCƒ_[ƒXƒeƒCƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    /// <param name="other"> Ú‹ßƒRƒ‰ƒCƒ_[. </param>
-    // ------------------------------------------------------------
-    void OnAroundTriggerStay(Collider other)
-    {
-        if (other.gameObject.tag == "Player")
-        {
-            var _dir = (other.gameObject.transform.position - this.transform.position).normalized;
-            _dir.y = 0;
-            this.transform.forward = _dir;
-        }
-    }
-
-    // ------------------------------------------------------------
-    /// <summary>
-    /// ü•ÓƒŒ[ƒ_[ƒRƒ‰ƒCƒ_[I—¹ƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    /// <param name="other"> Ú‹ßƒRƒ‰ƒCƒ_[. </param>
-    // ------------------------------------------------------------
-    void OnAroundTriggerExit(Collider other)
-    {
-        if (other.gameObject.tag == "Player")
-        {
-            isBattle = false;
-        }
-    }
-
-    // ------------------------------------------------------------
-    /// <summary>
-    /// UŒ‚ƒRƒ‰ƒCƒ_[ƒGƒ“ƒ^[ƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    /// <param name="other"> Ú‹ßƒRƒ‰ƒCƒ_[. </param>
-    // ------------------------------------------------------------
-    void OnAttackTriggerEnter(Collider other)
-    {
-        if (other.gameObject.tag == "Player")
-        {
-            var player = other.GetComponent<PlayerController>();
-            player?.OnEnemyAttackHit(CurrentStatus.Power, this.transform.position);
-            attackHitColliderCall.gameObject.SetActive(false);
-        }
-    }
 
     // ----------------------------------------------------------
     /// <summary>
-    /// UŒ‚ƒqƒbƒgƒR[ƒ‹.
+    /// æ”»æ’ƒãƒ’ãƒƒãƒˆæ™‚ã‚³ãƒ¼ãƒ«.
     /// </summary>
-    /// <param name="damage"> H‚ç‚Á‚½ƒ_ƒ[ƒW. </param>
+    /// <param name="damage"> é£Ÿã‚‰ã£ãŸãƒ€ãƒ¡ãƒ¼ã‚¸. </param>
     // ----------------------------------------------------------
     public void OnAttackHit(int damage, Vector3 attackPosition)
     {
         CurrentStatus.Hp -= damage;
+        hpBar.value = CurrentStatus.Hp;
         Debug.Log("Hit Damage " + damage + "/CurrentHp = " + CurrentStatus.Hp);
 
         var pos = myCollider.ClosestPoint(attackPosition);
@@ -170,7 +131,7 @@ public class EnemyBase : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒp[ƒeƒBƒNƒ‹‚ªI—¹‚µ‚½‚ç”jŠü‚·‚é.
+    /// ãƒ‘ãƒ¼ãƒ†ã‚£ã‚¯ãƒ«ãŒçµ‚äº†ã—ãŸã‚‰ç ´æ£„ã™ã‚‹.
     /// </summary>
     /// <param name="particle"></param>
     // ---------------------------------------------------------------------
@@ -182,19 +143,18 @@ public class EnemyBase : MonoBehaviour
 
     // ----------------------------------------------------------
     /// <summary>
-    /// €–SƒR[ƒ‹.
+    /// æ­»äº¡æ™‚ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     void OnDie()
     {
-        Debug.Log("€–S");
-        
+        Debug.Log("æ­»äº¡");
         animator.SetBool("isDie", true);
     }
 
     // ----------------------------------------------------------
     /// <summary>
-    /// €–SƒAƒjƒ[ƒVƒ‡ƒ“I—¹ƒR[ƒ‹.
+    /// æ­»äº¡ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†æ™‚ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     void Anim_DieEnd()
@@ -202,9 +162,70 @@ public class EnemyBase : MonoBehaviour
         this.gameObject.SetActive(false);
     }
 
+    // ------------------------------------------------------------
+    /// <summary>
+    /// å‘¨è¾ºãƒ¬ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    /// <param name="other"> æ¥è¿‘ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
+    // ------------------------------------------------------------
+    void OnAroundTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Player")
+        {
+            IsBattle = true;
+        }
+    }
+
+    // ------------------------------------------------------------
+    /// <summary>
+    /// å‘¨è¾ºãƒ¬ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¹ãƒ†ã‚¤ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    /// <param name="other"> æ¥è¿‘ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
+    // ------------------------------------------------------------
+    void OnAroundTriggerStay(Collider other)
+    {
+        if (other.gameObject.tag == "Player")
+        {
+
+            var _dir = (other.gameObject.transform.position - this.transform.position).normalized;
+            _dir.y = 0;
+            this.transform.forward = _dir;
+        }
+    }
+
+    // ------------------------------------------------------------
+    /// <summary>
+    /// å‘¨è¾ºãƒ¬ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼çµ‚äº†ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    /// <param name="other"> æ¥è¿‘ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
+    // ------------------------------------------------------------
+    void OnAroundTriggerExit(Collider other)
+    {
+        if (other.gameObject.tag == "Player")
+        {
+            IsBattle = false;
+        }
+    }
+
+    // ------------------------------------------------------------
+    /// <summary>
+    /// æ”»æ’ƒã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    /// <param name="other"> æ¥è¿‘ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
+    // ------------------------------------------------------------
+    void OnAttackTriggerEnter(Collider other)
+    {
+        if (other.gameObject.tag == "Player")
+        {
+            var player = other.GetComponent<PlayerController>();
+            player?.OnEnemyAttackHit(CurrentStatus.Power, this.transform.position);
+            attackHitColliderCall.gameObject.SetActive(false);
+        }
+    }
+
     // ----------------------------------------------------------
     /// <summary>
-    /// UŒ‚HitƒAƒjƒ[ƒVƒ‡ƒ“ƒR[ƒ‹.
+    /// æ”»æ’ƒHitã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     void Anim_AttackHit()
@@ -214,11 +235,32 @@ public class EnemyBase : MonoBehaviour
 
     // ----------------------------------------------------------
     /// <summary>
-    /// UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“I—¹ƒR[ƒ‹.
+    /// æ”»æ’ƒã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†æ™‚ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     void Anim_AttackEnd()
     {
         attackHitColliderCall.gameObject.SetActive(false);
     }
+
+    // ----------------------------------------------------------
+    /// <summary>
+    /// ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãƒªãƒˆãƒ©ã‚¤æ™‚ã®å‡¦ç†.
+    /// </summary>
+    // ----------------------------------------------------------
+    public void OnRetry()
+    {
+        // ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã‚’åŸºæœ¬ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã¨ã—ã¦è¨­å®š.
+        CurrentStatus.Hp = DefaultStatus.Hp;
+        CurrentStatus.Power = DefaultStatus.Power;
+        hpBar.value = CurrentStatus.Hp;
+
+        // é–‹å§‹æ™‚ã®ä½ç½®å›è»¢ã‚’ä¿ç®¡.
+        this.transform.position = startPosition;
+        this.transform.rotation = startRotation;
+
+        this.gameObject.SetActive(true);
+
+    }
+
 }
