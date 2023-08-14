@@ -5,18 +5,18 @@ using UnityEngine.Events;
 
 // -------------------------------------------------------------------------
 /// <summary>
-/// ƒRƒ‰ƒCƒ_[ƒR[ƒ‹ƒoƒbƒN‚ÌóMƒ†[ƒeƒBƒŠƒeƒBƒNƒ‰ƒX.
+/// ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯ã®å—ä¿¡ãƒ¦ãƒ¼ãƒ†ã‚£ãƒªãƒ†ã‚£ã‚¯ãƒ©ã‚¹.
 /// </summary>
 // -------------------------------------------------------------------------
 public class ColliderCallReceiver : MonoBehaviour
 {
-    // ƒgƒŠƒK[ƒCƒxƒ“ƒg’è‹`ƒNƒ‰ƒX.
+    // ãƒˆãƒªã‚¬ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆå®šç¾©ã‚¯ãƒ©ã‚¹.
     public class TriggerEvent : UnityEvent<Collider> { }
-    // ƒgƒŠƒK[ƒGƒ“ƒ^[ƒCƒxƒ“ƒg.
+    // ãƒˆãƒªã‚¬ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆ.
     public TriggerEvent TriggerEnterEvent = new TriggerEvent();
-    // ƒgƒŠƒK[ƒXƒeƒCƒCƒxƒ“ƒg.
+    // ãƒˆãƒªã‚¬ãƒ¼ã‚¹ãƒ†ã‚¤ã‚¤ãƒ™ãƒ³ãƒˆ.
     public TriggerEvent TriggerStayEvent = new TriggerEvent();
-    // ƒgƒŠƒK[ƒCƒOƒWƒbƒgƒCƒxƒ“ƒg.
+    // ãƒˆãƒªã‚¬ãƒ¼ã‚¤ã‚°ã‚¸ãƒƒãƒˆã‚¤ãƒ™ãƒ³ãƒˆ.
     public TriggerEvent TriggerExitEvent = new TriggerEvent();
 
     void Start()
@@ -26,9 +26,9 @@ public class ColliderCallReceiver : MonoBehaviour
 
     // -------------------------------------------------------------------------
     /// <summary>
-    /// ƒgƒŠƒK[ƒGƒ“ƒ^[ƒR[ƒ‹ƒoƒbƒN.
+    /// ãƒˆãƒªã‚¬ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
-    /// <param name="other"> ÚG‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="other"> æ¥è§¦ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // -------------------------------------------------------------------------
     void OnTriggerEnter(Collider other)
     {
@@ -37,9 +37,9 @@ public class ColliderCallReceiver : MonoBehaviour
 
     // -------------------------------------------------------------------------
     /// <summary>
-    /// ƒgƒŠƒK[ƒXƒeƒCƒR[ƒ‹ƒoƒbƒN.
+    /// ãƒˆãƒªã‚¬ãƒ¼ã‚¹ãƒ†ã‚¤ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
-    /// <param name="other"> ÚG‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="other"> æ¥è§¦ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // -------------------------------------------------------------------------
     void OnTriggerStay(Collider other)
     {
@@ -48,9 +48,9 @@ public class ColliderCallReceiver : MonoBehaviour
 
     // -------------------------------------------------------------------------
     /// <summary>
-    /// ƒgƒŠƒK[ƒCƒOƒWƒbƒgƒR[ƒ‹ƒoƒbƒN.
+    /// ãƒˆãƒªã‚¬ãƒ¼ã‚¤ã‚°ã‚¸ãƒƒãƒˆã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
-    /// <param name="other"> ÚG‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="other"> æ¥è§¦ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // -------------------------------------------------------------------------
     void OnTriggerExit(Collider other)
     {
