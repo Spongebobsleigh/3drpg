@@ -2,6 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Events;
+using UnityEngine.AI;
 
 public class EnemyBase : MonoBehaviour
 {
@@ -24,6 +26,8 @@ public class EnemyBase : MonoBehaviour
     // 現在のステータス.
     public Status CurrentStatus = new Status();
 
+    [SerializeField] public bool IsBoss = false;
+
     // アニメーター.
     Animator animator = null;
 
@@ -44,7 +48,9 @@ public class EnemyBase : MonoBehaviour
     float attackTimer = 0f;
 
     //! 攻撃判定用コライダーコール.
-    [SerializeField] ColliderCallReceiver attackHitColliderCall = null;
+    [SerializeField] protected ColliderCallReceiver attackHitColliderCall = null;
+    // 現在の攻撃ターゲット.
+    protected Transform currentAttackTarget = null;
 
     // 開始時位置.
     Vector3 startPosition = new Vector3();
@@ -54,7 +60,21 @@ public class EnemyBase : MonoBehaviour
     //! HPバーのスライダー.
     [SerializeField] Slider hpBar = null;
 
-    void Start()
+    // 敵の移動イベント定義クラス.
+    public class EnemyMoveEvent : UnityEvent<EnemyBase> { }
+    // 目的地設定イベント.
+    public EnemyMoveEvent ArrivalEvent = new EnemyMoveEvent();
+
+    // ナビメッシュ.
+    NavMeshAgent navMeshAgent = null;
+
+    // 現在設定されている目的地.
+    Transform currentTarget = null;
+
+    // 死亡時イベント.
+    public EnemyMoveEvent DestroyEvent = new EnemyMoveEvent();
+
+    protected virtual void Start()
     {
         // Animatorを取得し保管.
         animator = GetComponent<Animator>();
@@ -82,12 +102,14 @@ public class EnemyBase : MonoBehaviour
         hpBar.value = CurrentStatus.Hp;
     }
 
-    void Update()
+    protected virtual void Update()
     {
         // 攻撃できる状態の時.
         if (IsBattle == true)
         {
             attackTimer += Time.deltaTime;
+
+            animator.SetBool("isRun", false);
 
             if (attackTimer >= 3f)
             {
@@ -98,9 +120,43 @@ public class EnemyBase : MonoBehaviour
         else
         {
             attackTimer = 0;
+
+            if (currentTarget == null)
+            {
+                animator.SetBool("isRun", false);
+
+                ArrivalEvent?.Invoke(this);
+                Debug.Log(gameObject.name + "移動開始.");
+            }
+            else
+            {
+                animator.SetBool("isRun", true);
+
+                var sqrDistance = (currentTarget.position - this.transform.position).sqrMagnitude;
+                if (sqrDistance < 3f)
+                {
+                    ArrivalEvent?.Invoke(this);
+                }
+            }
         }
+
     }
 
+    // ----------------------------------------------------------
+    /// <summary>
+    /// ナビメッシュの次の目的地を設定.
+    /// </summary>
+    /// <param name="target"> 目的地トランスフォーム. </param>
+    // ----------------------------------------------------------
+    public void SetNextTarget(Transform target)
+    {
+        if (target == null) return;
+        if (navMeshAgent == null) navMeshAgent = GetComponent<NavMeshAgent>();
+
+        navMeshAgent.SetDestination(target.position);
+        Debug.Log(gameObject.name + "ターゲットへ移動." + target.gameObject.name);
+        currentTarget = target;
+    }
 
     // ----------------------------------------------------------
     /// <summary>
@@ -159,9 +215,9 @@ public class EnemyBase : MonoBehaviour
     // ----------------------------------------------------------
     void Anim_DieEnd()
     {
-        this.gameObject.SetActive(false);
+        // Destroy( gameObject );   // 確認のためコメントアウトしていますが削除してOKです。
+        DestroyEvent?.Invoke(this);
     }
-
     // ------------------------------------------------------------
     /// <summary>
     /// 周辺レーダーコライダーエンターイベントコール.
@@ -173,6 +229,9 @@ public class EnemyBase : MonoBehaviour
         if (other.gameObject.tag == "Player")
         {
             IsBattle = true;
+
+            navMeshAgent.SetDestination(this.transform.position);
+            currentTarget = null;
         }
     }
 
@@ -182,7 +241,7 @@ public class EnemyBase : MonoBehaviour
     /// </summary>
     /// <param name="other"> 接近コライダー. </param>
     // ------------------------------------------------------------
-    void OnAroundTriggerStay(Collider other)
+    protected virtual void OnAroundTriggerStay(Collider other)
     {
         if (other.gameObject.tag == "Player")
         {
@@ -190,6 +249,8 @@ public class EnemyBase : MonoBehaviour
             var _dir = (other.gameObject.transform.position - this.transform.position).normalized;
             _dir.y = 0;
             this.transform.forward = _dir;
+
+            currentAttackTarget = other.gameObject.transform;
         }
     }
 
@@ -204,6 +265,8 @@ public class EnemyBase : MonoBehaviour
         if (other.gameObject.tag == "Player")
         {
             IsBattle = false;
+
+            currentAttackTarget = null;
         }
     }
 
@@ -228,7 +291,7 @@ public class EnemyBase : MonoBehaviour
     /// 攻撃Hitアニメーションコール.
     /// </summary>
     // ----------------------------------------------------------
-    void Anim_AttackHit()
+    protected virtual void Anim_AttackHit()
     {
         attackHitColliderCall.gameObject.SetActive(true);
     }
@@ -238,7 +301,7 @@ public class EnemyBase : MonoBehaviour
     /// 攻撃アニメーション終了時コール.
     /// </summary>
     // ----------------------------------------------------------
-    void Anim_AttackEnd()
+    protected virtual void Anim_AttackEnd()
     {
         attackHitColliderCall.gameObject.SetActive(false);
     }
@@ -262,5 +325,7 @@ public class EnemyBase : MonoBehaviour
         this.gameObject.SetActive(true);
 
     }
+
+
 
 }
