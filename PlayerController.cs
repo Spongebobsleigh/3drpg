@@ -1,166 +1,184 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
     // -------------------------------------------------------
     /// <summary>
-    /// ƒXƒe[ƒ^ƒX.
+    /// ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     /// </summary>
     // -------------------------------------------------------
     [System.Serializable]
     public class Status
     {
-        // ‘Ì—Í.
+        // ä½“åŠ›.
         public int Hp = 10;
-        // UŒ‚—Í.
+        // æ”»æ’ƒåŠ›.
         public int Power = 1;
     }
 
-    // UŒ‚HitƒIƒuƒWƒFƒNƒg‚ÌColliderCall.
+    // æ”»æ’ƒHitã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã®ColliderCall.
     [SerializeField] ColliderCallReceiver attackHitCall = null;
-    // Šî–{ƒXƒe[ƒ^ƒX.
+    // åŸºæœ¬ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     [SerializeField] Status DefaultStatus = new Status();
-    // Œ»İ‚ÌƒXƒe[ƒ^ƒX.
+    // ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹.
     public Status CurrentStatus = new Status();
 
-    // UŒ‚”»’è—pƒIƒuƒWƒFƒNƒg.
+    // æ”»æ’ƒåˆ¤å®šç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ.
     [SerializeField] GameObject attackHit = null;
-    // İ’u”»’è—pColliderCall.
+    // è¨­ç½®åˆ¤å®šç”¨ColliderCall.
     [SerializeField] ColliderCallReceiver footColliderCall = null;
-    // ƒ^ƒbƒ`ƒ}[ƒJ[.
+    // ã‚¿ãƒƒãƒãƒãƒ¼ã‚«ãƒ¼.
     [SerializeField] GameObject touchMarker = null;
-    // ƒWƒƒƒ“ƒv—Í.
+    // ã‚¸ãƒ£ãƒ³ãƒ—åŠ›.
     [SerializeField] float jumpPower = 20f;
-    // ƒAƒjƒ[ƒ^[.
+
+    // ã‚«ãƒ¡ãƒ©ã‚³ãƒ³ãƒˆãƒ­ãƒ¼ãƒ©ãƒ¼.
+    [SerializeField] PlayerCameraController cameraController = null;
+
+    // è‡ªèº«ã®ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼.
+    [SerializeField] Collider myCollider = null;
+    // æ”»æ’ƒã‚’é£Ÿã‚‰ã£ãŸã¨ãã®ãƒ‘ãƒ¼ãƒ†ã‚£ã‚¯ãƒ«ãƒ—ãƒ¬ãƒãƒ–.
+    [SerializeField] GameObject hitParticlePrefab = null;
+    // ãƒ‘ãƒ¼ãƒ†ã‚£ã‚¯ãƒ«ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆä¿ç®¡ç”¨ãƒªã‚¹ãƒˆ.
+    List<GameObject> particleObjectList = new List<GameObject>();
+
+    //! HPãƒãƒ¼ã®ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼.
+    [SerializeField] Slider hpBar = null;
+
+    //! ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼æ™‚ã‚¤ãƒ™ãƒ³ãƒˆ.
+    public UnityEvent GameOverEvent = new UnityEvent();
+    // é–‹å§‹æ™‚ä½ç½®.
+    Vector3 startPosition = new Vector3();
+    // é–‹å§‹æ™‚è§’åº¦.
+    Quaternion startRotation = new Quaternion();
+
+    // ã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚¿ãƒ¼.
     Animator animator = null;
-    // ƒŠƒWƒbƒhƒ{ƒfƒB.
+    // ãƒªã‚¸ãƒƒãƒ‰ãƒœãƒ‡ã‚£.
     Rigidbody rigid = null;
-    // UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“’†ƒtƒ‰ƒO.
+    //! æ”»æ’ƒã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ä¸­ãƒ•ãƒ©ã‚°.
     bool isAttack = false;
-    // Ú’nƒtƒ‰ƒO.
+    // æ¥åœ°ãƒ•ãƒ©ã‚°.
     bool isGround = false;
 
-    // PCƒL[‰¡•ûŒü“ü—Í.
+    // PCã‚­ãƒ¼æ¨ªæ–¹å‘å…¥åŠ›.
     float horizontalKeyInput = 0;
-    // PCƒL[c•ûŒü“ü—Í.
+    // PCã‚­ãƒ¼ç¸¦æ–¹å‘å…¥åŠ›.
     float verticalKeyInput = 0;
 
     bool isTouch = false;
 
-    // ¶”¼•ªƒ^ƒbƒ`ƒXƒ^[ƒgˆÊ’u.
+    // å·¦åŠåˆ†ã‚¿ãƒƒãƒã‚¹ã‚¿ãƒ¼ãƒˆä½ç½®.
     Vector2 leftStartTouch = new Vector2();
-    // ¶”¼•ªƒ^ƒbƒ`“ü—Í.
+    // å·¦åŠåˆ†ã‚¿ãƒƒãƒå…¥åŠ›.
     Vector2 leftTouchInput = new Vector2();
-
-    // ƒJƒƒ‰ƒRƒ“ƒgƒ[ƒ‰[.
-    [SerializeField] PlayerCameraController cameraController = null;
-
-    // ©g‚ÌƒRƒ‰ƒCƒ_[.
-    [SerializeField] Collider myCollider = null;
-    // UŒ‚‚ğH‚ç‚Á‚½‚Æ‚«‚Ìƒp[ƒeƒBƒNƒ‹ƒvƒŒƒnƒu.
-    [SerializeField] GameObject hitParticlePrefab = null;
-    // ƒp[ƒeƒBƒNƒ‹ƒIƒuƒWƒFƒNƒg•ÛŠÇ—pƒŠƒXƒg.
-    List<GameObject> particleObjectList = new List<GameObject>();
 
     // Start is called before the first frame update
     void Start()
     {
-        // Animator‚ğæ“¾‚µ•ÛŠÇ.
+        // Animatorã‚’å–å¾—ã—ä¿ç®¡.
         animator = GetComponent<Animator>();
-        // Rigidbody‚Ìæ“¾.
+        // Rigidbodyã®å–å¾—.
         rigid = GetComponent<Rigidbody>();
-        // UŒ‚”»’è—pƒIƒuƒWƒFƒNƒg‚ğ”ñ•\¦‚É.
+        // æ”»æ’ƒåˆ¤å®šç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’éè¡¨ç¤ºã«.
         attackHit.SetActive(false);
 
-        // FootSphere‚ÌƒCƒxƒ“ƒg“o˜^.
-        footColliderCall.TriggerEnterEvent.AddListener(OnFootTriggerEnter);
+        // FootSphereã®ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ².
+        footColliderCall.TriggerStayEvent.AddListener(OnFootTriggerStay);
         footColliderCall.TriggerExitEvent.AddListener(OnFootTriggerExit);
 
-        // UŒ‚”»’è—pƒRƒ‰ƒCƒ_[ƒCƒxƒ“ƒg“o˜^.
+        // æ”»æ’ƒåˆ¤å®šç”¨ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆç™»éŒ².
         attackHitCall.TriggerEnterEvent.AddListener(OnAttackHitTriggerEnter);
-        // Œ»İ‚ÌƒXƒe[ƒ^ƒX‚Ì‰Šú‰».
+        // ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã®åˆæœŸåŒ–.
         CurrentStatus.Hp = DefaultStatus.Hp;
         CurrentStatus.Power = DefaultStatus.Power;
+
+        // é–‹å§‹æ™‚ã®ä½ç½®å›è»¢ã‚’ä¿ç®¡.
+        startPosition = this.transform.position;
+        startRotation = this.transform.rotation;
+
+        // ã‚¹ãƒ©ã‚¤ãƒ€ãƒ¼ã‚’åˆæœŸåŒ–.
+        hpBar.maxValue = DefaultStatus.Hp;
+        hpBar.value = CurrentStatus.Hp;
     }
 
-    
     // Update is called once per frame
     void Update()
     {
-        // ƒJƒƒ‰‚ğƒvƒŒƒCƒ„[‚ÉŒü‚¯‚é. 
+        // ã‚«ãƒ¡ãƒ©ã‚’ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«å‘ã‘ã‚‹. 
         cameraController.UpdateCameraLook(this.transform);
 
         if (Application.platform == RuntimePlatform.WindowsEditor || Application.platform == RuntimePlatform.IPhonePlayer)
         {
-            // ƒXƒ}ƒzƒ^ƒbƒ`‘€ì.
-            // ƒ^ƒbƒ`‚µ‚Ä‚¢‚éw‚Ì”‚ª‚O‚æ‚è‘½‚¢.
+            // ã‚¹ãƒãƒ›ã‚¿ãƒƒãƒæ“ä½œ.
+            // ã‚¿ãƒƒãƒã—ã¦ã„ã‚‹æŒ‡ã®æ•°ãŒï¼ã‚ˆã‚Šå¤šã„.
             if (Input.touchCount > 0)
             {
                 isTouch = true;
-                // ƒ^ƒbƒ`î•ñ‚ğ‚·‚×‚Äæ“¾.
+                // ã‚¿ãƒƒãƒæƒ…å ±ã‚’ã™ã¹ã¦å–å¾—.
                 Touch[] touches = Input.touches;
-
-                // ‘S•”‚Ìƒ^ƒbƒ`‚ğŒJ‚è•Ô‚µ‚Ä”»’è.
+                // å…¨éƒ¨ã®ã‚¿ãƒƒãƒã‚’ç¹°ã‚Šè¿”ã—ã¦åˆ¤å®š.
                 foreach (var touch in touches)
                 {
                     bool isLeftTouch = false;
                     bool isRightTouch = false;
-
-                    // ƒ^ƒbƒ`ˆÊ’u‚ÌX²•ûŒü‚ªƒXƒNƒŠ[ƒ“‚Ì¶‘¤.
+                    // ã‚¿ãƒƒãƒä½ç½®ã®Xè»¸æ–¹å‘ãŒã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã®å·¦å´.
                     if (touch.position.x > 0 && touch.position.x < Screen.width / 2)
                     {
                         isLeftTouch = true;
+
                     }
-                    // ƒ^ƒbƒ`ˆÊ’u‚ÌX²•ûŒü‚ªƒXƒNƒŠ[ƒ“‚Ì‰E‘¤.
+                    // ã‚¿ãƒƒãƒä½ç½®ã®Xè»¸æ–¹å‘ãŒã‚¹ã‚¯ãƒªãƒ¼ãƒ³ã®å³å´.
                     else if (touch.position.x > Screen.width / 2 && touch.position.x < Screen.width)
                     {
-                        isRightTouch = true;
+                        isRightTouch = true; ;
                     }
-                    
-                    // ¶ƒ^ƒbƒ`.
+
+                    // å·¦ã‚¿ãƒƒãƒ.
                     if (isLeftTouch == true)
                     {
-                        // ƒ^ƒbƒ`ŠJn.
+                        // å·¦åŠåˆ†ã‚’ã‚¿ãƒƒãƒã—ãŸéš›ã®å‡¦ç†.
+                        // ã‚¿ãƒƒãƒé–‹å§‹.
                         if (touch.phase == TouchPhase.Began)
                         {
-                            Debug.Log("ƒ^ƒbƒ`ŠJn");
-                            // ŠJnˆÊ’u‚ğ•ÛŠÇ.
+                            // é–‹å§‹ä½ç½®ã‚’ä¿ç®¡.
                             leftStartTouch = touch.position;
-                            // ŠJnˆÊ’u‚Éƒ}[ƒJ[‚ğ•\¦.
+                            // é–‹å§‹ä½ç½®ã«ãƒãƒ¼ã‚«ãƒ¼ã‚’è¡¨ç¤º.
                             touchMarker.SetActive(true);
                             Vector3 touchPosition = touch.position;
                             touchPosition.z = 1f;
                             Vector3 markerPosition = Camera.main.ScreenToWorldPoint(touchPosition);
                             touchMarker.transform.position = markerPosition;
                         }
-                        // ƒ^ƒbƒ`’†.
+                        // ã‚¿ãƒƒãƒä¸­.
                         else if (touch.phase == TouchPhase.Moved || touch.phase == TouchPhase.Stationary)
                         {
-                            Debug.Log("ƒ^ƒbƒ`’†");
-                            // Œ»İ‚ÌˆÊ’u‚ğ•ÛŠÇ.
+                            // ç¾åœ¨ã®ä½ç½®ã‚’éšæ™‚ä¿ç®¡.
                             Vector2 position = touch.position;
-                            // ˆÚ“®—p‚Ì•ûŒü‚ğ•ÛŠÇ.
+                            // ç§»å‹•ç”¨ã®æ–¹å‘ã‚’ä¿ç®¡.
                             leftTouchInput = position - leftStartTouch;
                         }
-                        // ƒ^ƒbƒ`I—¹.
+                        // ã‚¿ãƒƒãƒçµ‚äº†.
                         else if (touch.phase == TouchPhase.Ended)
                         {
-                            Debug.Log("ƒ^ƒbƒ`I—¹");
                             leftTouchInput = Vector2.zero;
-                            // ƒ}[ƒJ[‚ğ”ñ•\¦.
+                            // ãƒãƒ¼ã‚«ãƒ¼ã‚’éè¡¨ç¤º.
                             touchMarker.gameObject.SetActive(false);
                         }
                     }
 
-                    // ‰Eƒ^ƒbƒ`.
+                    // å³ã‚¿ãƒƒãƒ.
                     if (isRightTouch == true)
                     {
+                        // å³åŠåˆ†ã‚’ã‚¿ãƒƒãƒã—ãŸéš›ã®å‡¦ç†.
                         cameraController.UpdateRightTouch(touch);
-                        // ‰E”¼•ª‚ğƒ^ƒbƒ`‚µ‚½Û‚Ìˆ—.
                     }
                 }
+
             }
             else
             {
@@ -169,11 +187,12 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            // PCƒL[“ü—Íæ“¾.
+            // PCã‚­ãƒ¼å…¥åŠ›å–å¾—.
             horizontalKeyInput = Input.GetAxis("Horizontal");
             verticalKeyInput = Input.GetAxis("Vertical");
         }
-        // ƒvƒŒƒCƒ„[‚ÌŒü‚«‚ğ’²®.
+
+        // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã®å‘ãã‚’èª¿æ•´.
         bool isKeyInput = (horizontalKeyInput != 0 || verticalKeyInput != 0 || leftTouchInput != Vector2.zero);
         if (isKeyInput == true && isAttack == false)
         {
@@ -192,6 +211,9 @@ public class PlayerController : MonoBehaviour
 
     void FixedUpdate()
     {
+        // ã‚«ãƒ¡ãƒ©ã®ä½ç½®ã‚’ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã«åˆã‚ã›ã‚‹.
+        cameraController.FixedUpdateCameraPosition(this.transform);
+
         if (isAttack == false)
         {
             Vector3 input = new Vector3();
@@ -213,60 +235,84 @@ public class PlayerController : MonoBehaviour
 
             rigid.AddForce(cameraMove - currentRigidVelocity, ForceMode.VelocityChange);
         }
-
-        // ƒJƒƒ‰‚ÌˆÊ’u‚ğƒvƒŒƒCƒ„[‚É‡‚í‚¹‚é.
-        cameraController.FixedUpdateCameraPosition(this.transform);
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// UŒ‚ƒ{ƒ^ƒ“ƒNƒŠƒbƒNƒR[ƒ‹ƒoƒbƒN.
+    /// æ”»æ’ƒãƒœã‚¿ãƒ³ã‚¯ãƒªãƒƒã‚¯ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
     // ---------------------------------------------------------------------
     public void OnAttackButtonClicked()
     {
         if (isAttack == false)
         {
-            // Animation‚ÌisAttackƒgƒŠƒK[‚ğ‹N“®.
+            // Animationã®isAttackãƒˆãƒªã‚¬ãƒ¼ã‚’èµ·å‹•.
             animator.SetTrigger("isAttack");
-            // UŒ‚ŠJn.
+            // æ”»æ’ƒé–‹å§‹.
             isAttack = true;
         }
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒWƒƒƒ“ƒvƒ{ƒ^ƒ“ƒNƒŠƒbƒNƒR[ƒ‹ƒoƒbƒN.
+    /// æ”»æ’ƒã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³Hitã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    // ---------------------------------------------------------------------
+    void Anim_AttackHit()
+    {
+        Debug.Log("Hit");
+        // æ”»æ’ƒåˆ¤å®šç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’è¡¨ç¤º.
+        attackHit.SetActive(true);
+    }
+
+    // ---------------------------------------------------------------------
+    /// <summary>
+    /// æ”»æ’ƒã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
+    /// </summary>
+    // ---------------------------------------------------------------------
+    void Anim_AttackEnd()
+    {
+        Debug.Log("End");
+        // æ”»æ’ƒåˆ¤å®šç”¨ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆã‚’éè¡¨ç¤ºã«.
+        attackHit.SetActive(false);
+        // æ”»æ’ƒçµ‚äº†.
+        isAttack = false;
+    }
+
+    // ---------------------------------------------------------------------
+    /// <summary>
+    /// ã‚¸ãƒ£ãƒ³ãƒ—ãƒœã‚¿ãƒ³ã‚¯ãƒªãƒƒã‚¯ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
     // ---------------------------------------------------------------------
     public void OnJumpButtonClicked()
     {
         if (isGround == true)
         {
+            Debug.Log("ã‚¸ãƒ£ãƒ³ãƒ—");
             rigid.AddForce(Vector3.up * jumpPower, ForceMode.Impulse);
         }
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// FootSphereƒgƒŠƒK[ƒGƒ“ƒ^[ƒR[ƒ‹.
+    /// FootSphereãƒˆãƒªã‚¬ãƒ¼ã‚¹ãƒ†ã‚¤ã‚³ãƒ¼ãƒ«.
     /// </summary>
-    /// <param name="col"> N“ü‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="col"> ä¾µå…¥ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // ---------------------------------------------------------------------
-    void OnFootTriggerEnter(Collider col)
+    void OnFootTriggerStay(Collider col)
     {
         if (col.gameObject.tag == "Ground")
         {
-            isGround = true;
-            animator.SetBool("isGround", true);
+            if (isGround == false) isGround = true;
+            if (animator.GetBool("isGround") == false) animator.SetBool("isGround", true);
         }
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// FootSphereƒgƒŠƒK[ƒCƒOƒWƒbƒgƒR[ƒ‹.
+    /// FootSphereãƒˆãƒªã‚¬ãƒ¼ã‚¤ã‚°ã‚¸ãƒƒãƒˆã‚³ãƒ¼ãƒ«.
     /// </summary>
-    /// <param name="col"> N“ü‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="col"> ä¾µå…¥ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // ---------------------------------------------------------------------
     void OnFootTriggerExit(Collider col)
     {
@@ -279,35 +325,9 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“HitƒCƒxƒ“ƒgƒR[ƒ‹.
+    /// æ”»æ’ƒåˆ¤å®šãƒˆãƒªã‚¬ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
     /// </summary>
-    // ---------------------------------------------------------------------
-    void Anim_AttackHit()
-    {
-        Debug.Log("Hit");
-        // UŒ‚”»’è—pƒIƒuƒWƒFƒNƒg‚ğ•\¦.
-        attackHit.SetActive(true);
-    }
-
-    // ---------------------------------------------------------------------
-    /// <summary>
-    /// UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“I—¹ƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    // ---------------------------------------------------------------------
-    void Anim_AttackEnd()
-    {
-        Debug.Log("End");
-        // UŒ‚”»’è—pƒIƒuƒWƒFƒNƒg‚ğ”ñ•\¦‚É.
-        attackHit.SetActive(false);
-        // UŒ‚I—¹.
-        isAttack = false;
-    }
-
-    // ---------------------------------------------------------------------
-    /// <summary>
-    /// UŒ‚”»’èƒgƒŠƒK[ƒGƒ“ƒ^[ƒCƒxƒ“ƒgƒR[ƒ‹.
-    /// </summary>
-    /// <param name="col"> N“ü‚µ‚½ƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="col"> ä¾µå…¥ã—ãŸã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // ---------------------------------------------------------------------
     void OnAttackHitTriggerEnter(Collider col)
     {
@@ -321,13 +341,14 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// “G‚ÌUŒ‚‚ªƒqƒbƒg‚µ‚½‚Æ‚«‚Ìˆ—.
+    /// æ•µã®æ”»æ’ƒãŒãƒ’ãƒƒãƒˆã—ãŸã¨ãã®å‡¦ç†.
     /// </summary>
-    /// <param name="damage"> H‚ç‚Á‚½ƒ_ƒ[ƒW. </param>
+    /// <param name="damage"> é£Ÿã‚‰ã£ãŸãƒ€ãƒ¡ãƒ¼ã‚¸. </param>
     // ---------------------------------------------------------------------
     public void OnEnemyAttackHit(int damage, Vector3 attackPosition)
     {
         CurrentStatus.Hp -= damage;
+        hpBar.value = CurrentStatus.Hp;
 
         var pos = myCollider.ClosestPoint(attackPosition);
         var obj = Instantiate(hitParticlePrefab, pos, Quaternion.identity);
@@ -341,13 +362,13 @@ public class PlayerController : MonoBehaviour
         }
         else
         {
-            Debug.Log(damage + "‚Ìƒ_ƒ[ƒW‚ğH‚ç‚Á‚½!!c‚èHP" + CurrentStatus.Hp);
+            Debug.Log(damage + "ã®ãƒ€ãƒ¡ãƒ¼ã‚¸ã‚’é£Ÿã‚‰ã£ãŸ!!æ®‹ã‚ŠHP" + CurrentStatus.Hp);
         }
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒp[ƒeƒBƒNƒ‹‚ªI—¹‚µ‚½‚ç”jŠü‚·‚é.
+    /// ãƒ‘ãƒ¼ãƒ†ã‚£ã‚¯ãƒ«ãŒçµ‚äº†ã—ãŸã‚‰ç ´æ£„ã™ã‚‹.
     /// </summary>
     /// <param name="particle"></param>
     // ---------------------------------------------------------------------
@@ -360,18 +381,40 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// €–Sˆ—.
+    /// æ­»äº¡æ™‚å‡¦ç†.
     /// </summary>
     // ---------------------------------------------------------------------
     void OnDie()
     {
-        Debug.Log("€–S‚µ‚Ü‚µ‚½B");
-
+        Debug.Log("æ­»äº¡ã—ã¾ã—ãŸã€‚");
         StopAllCoroutines();
         if (particleObjectList.Count > 0)
         {
             foreach (var obj in particleObjectList) Destroy(obj);
             particleObjectList.Clear();
         }
+        GameOverEvent?.Invoke();
     }
+
+    // ---------------------------------------------------------------------
+    /// <summary>
+    /// ãƒªãƒˆãƒ©ã‚¤å‡¦ç†.
+    /// </summary>
+    // ---------------------------------------------------------------------
+    public void Retry()
+    {
+        // ç¾åœ¨ã®ã‚¹ãƒ†ãƒ¼ã‚¿ã‚¹ã®åˆæœŸåŒ–.
+        CurrentStatus.Hp = DefaultStatus.Hp;
+        CurrentStatus.Power = DefaultStatus.Power;
+        hpBar.value = CurrentStatus.Hp;
+
+        // ä½ç½®å›è»¢ã‚’åˆæœŸä½ç½®ã«æˆ»ã™.
+        this.transform.position = startPosition;
+        this.transform.rotation = startRotation;
+
+        //æ”»æ’ƒå‡¦ç†ã®é€”ä¸­ã§ã‚„ã‚‰ã‚ŒãŸæ™‚ç”¨
+        isAttack = false;
+
+    }
+
 }
