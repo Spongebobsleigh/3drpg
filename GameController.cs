@@ -1,37 +1,48 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 public class GameController : MonoBehaviour
 {
-    // ƒQ[ƒ€ƒI[ƒo[ƒIƒuƒWƒFƒNƒg.
+    // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ.
     [SerializeField] GameObject gameOver = null;
-    // ƒQ[ƒ€ƒNƒŠƒAƒIƒuƒWƒFƒNƒg.
+    // ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ.
     [SerializeField] GameObject gameClear = null;
 
-    // ƒvƒŒƒCƒ„[.
+    // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼.
     [SerializeField] PlayerController player = null;
 
-    // “G‚ÌˆÚ“®ƒ^[ƒQƒbƒgƒŠƒXƒg.
+    // æ•µã®ç§»å‹•ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒªã‚¹ãƒˆ.
     [SerializeField] List<Transform> enemyTargets = new List<Transform>();
 
-    // “GƒvƒŒƒnƒuƒŠƒXƒg.
+    // æ•µãƒ—ãƒ¬ãƒãƒ–ãƒªã‚¹ãƒˆ.
     [SerializeField] List<GameObject> enemyPrefabList = new List<GameObject>();
-    // “GoŒ»’n“_ƒŠƒXƒg.
+    // æ•µå‡ºç¾åœ°ç‚¹ãƒªã‚¹ãƒˆ.
     [SerializeField] List<Transform> enemyGateList = new List<Transform>();
-    // ƒtƒB[ƒ‹ƒhã‚É‚¢‚é“GƒŠƒXƒg.
+    // ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ä¸Šã«ã„ã‚‹æ•µãƒªã‚¹ãƒˆ.
     List<EnemyBase> fieldEnemys = new List<EnemyBase>();
 
-    //! “G©“®¶¬ƒtƒ‰ƒO.
+    //! æ•µè‡ªå‹•ç”Ÿæˆãƒ•ãƒ©ã‚°.
     bool isEnemySpawn = false;
-    //! Œ»İ‚Ì“GŒ‚”j”.
+    //! ç¾åœ¨ã®æ•µæ’ƒç ´æ•°.
     int currentBossCount = 0;
 
-    //! ƒ{ƒXƒvƒŒƒnƒu.
+    //! ãƒœã‚¹ãƒ—ãƒ¬ãƒãƒ–.
     [SerializeField] GameObject bossPrefab = null;
 
-    // ƒ{ƒXoŒ»ƒtƒ‰ƒO.
+    // ãƒœã‚¹å‡ºç¾ãƒ•ãƒ©ã‚°.
     bool isBossAppeared = false;
+
+    // ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢ç”»é¢ã§ã®æ™‚é–“è¡¨ç¤ºãƒ†ã‚­ã‚¹ãƒˆ.
+    [SerializeField] TextMeshPro gameClearTimeText = null;
+    // é€šå¸¸æ™‚ã®ç”»é¢ã«æ™‚é–“è¡¨ç¤ºã™ã‚‹ãŸã‚ã®ãƒ†ã‚­ã‚¹ãƒˆ.
+    [SerializeField] TextMeshPro timerText = null;
+    //! ç¾åœ¨ã®æ™‚é–“.
+    float currentTime = 0;
+    //! æ™‚é–“è¨ˆæ¸¬ãƒ•ãƒ©ã‚°.
+    bool isTimer = false;
 
     void Start()
     {
@@ -43,29 +54,43 @@ public class GameController : MonoBehaviour
 
     }
 
+    void Update()
+    {
+        if (isTimer == true)
+        {
+            currentTime += Time.deltaTime;
+            if (currentTime > 999f) timerText.text = "999.9";
+            else timerText.text = currentTime.ToString("000.0");
+        }
+    }
+
     // --------------------------------------------------------------------- 
     /// <summary> 
-    /// ‰Šú‰»ˆ—. 
+    /// åˆæœŸåŒ–å‡¦ç†. 
     /// </summary> 
     // ---------------------------------------------------------------------
     // --------------------------------------------------------------------- 
     /// <summary> 
-    /// ‰Šú‰»ˆ—. 
+    /// åˆæœŸåŒ–å‡¦ç†. 
     /// </summary> 
     // ---------------------------------------------------------------------
     void Init()
     {
-        // “G‚Ì¶¬ŠJn.
+        // æ•µã®ç”Ÿæˆé–‹å§‹.
         isEnemySpawn = true;
         StartCoroutine(EnemyCreateLoop());
 
         currentBossCount = 0;
         isBossAppeared = false;
+
+        currentTime = 0;
+        isTimer = true;
+        timerText.text = "0:00";
     }
 
     // --------------------------------------------------------------------- 
     /// <summary>
-    /// “G¶¬ƒ‹[ƒvƒRƒ‹[ƒ`ƒ“.
+    /// æ•µç”Ÿæˆãƒ«ãƒ¼ãƒ—ã‚³ãƒ«ãƒ¼ãƒãƒ³.
     /// </summary>
     // --------------------------------------------------------------------- 
     IEnumerator EnemyCreateLoop()
@@ -78,7 +103,7 @@ public class GameController : MonoBehaviour
             {
                 CreateEnemy();
             }
-            // 10‘ÌˆÈã“|‚µ‚Ä‚¢‚½‚ç¶¬’†~.
+            // 10ä½“ä»¥ä¸Šå€’ã—ã¦ã„ãŸã‚‰ç”Ÿæˆä¸­æ­¢.
             if (currentBossCount > 10) isEnemySpawn = false;
 
             if (isEnemySpawn == false) break;
@@ -87,14 +112,14 @@ public class GameController : MonoBehaviour
 
     // --------------------------------------------------------------------- 
     /// <summary>
-    /// ƒ{ƒX‚Ì¶¬.
+    /// ãƒœã‚¹ã®ç”Ÿæˆ.
     /// </summary>
     // --------------------------------------------------------------------- 
     void CreateBoss()
     {
         if (isBossAppeared == true) return;
 
-        Debug.Log("Boss‚ªoŒ»!!");
+        Debug.Log("BossãŒå‡ºç¾!!");
 
         var posNum = Random.Range(0, enemyGateList.Count);
         var pos = enemyGateList[posNum];
@@ -110,7 +135,7 @@ public class GameController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// “G‚ğì¬.
+    /// æ•µã‚’ä½œæˆ.
     /// </summary>
     // ---------------------------------------------------------------------
     void CreateEnemy()
@@ -133,9 +158,9 @@ public class GameController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒŠƒXƒg‚©‚çƒ‰ƒ“ƒ_ƒ€‚Éƒ^[ƒQƒbƒg‚ğæ“¾.
+    /// ãƒªã‚¹ãƒˆã‹ã‚‰ãƒ©ãƒ³ãƒ€ãƒ ã«ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’å–å¾—.
     /// </summary>
-    /// <returns> ƒ^[ƒQƒbƒg. </returns>
+    /// <returns> ã‚¿ãƒ¼ã‚²ãƒƒãƒˆ. </returns>
     // ---------------------------------------------------------------------
     Transform GetEnemyMoveTarget()
     {
@@ -148,9 +173,9 @@ public class GameController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// “G‚ÉŸ‚Ì–Ú“I’n‚ğİ’è.
+    /// æ•µã«æ¬¡ã®ç›®çš„åœ°ã‚’è¨­å®š.
     /// </summary>
-    /// <param name="enemy"> “G. </param>
+    /// <param name="enemy"> æ•µ. </param>
     // ---------------------------------------------------------------------
     void EnemyMove(EnemyBase enemy)
     {
@@ -160,9 +185,9 @@ public class GameController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// “G”j‰ó‚ÌƒCƒxƒ“ƒg.
+    /// æ•µç ´å£Šæ™‚ã®ã‚¤ãƒ™ãƒ³ãƒˆ.
     /// </summary>
-    /// <param name="enemy"> “G. </param>
+    /// <param name="enemy"> æ•µ. </param>
     // ---------------------------------------------------------------------
     void EnemyDestroy(EnemyBase enemy)
     {
@@ -184,11 +209,15 @@ public class GameController : MonoBehaviour
         else
         {
             Debug.Log("GameClear!!");
-            // ƒQ[ƒ€ƒNƒŠƒA‚ğ•\¦.
+            isTimer = false;
+
+            if (currentTime > 999f) gameClearTimeText.text = "Time : 999.9";
+            else gameClearTimeText.text = "Time : " + currentTime.ToString("000.0");
+            // ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢ã‚’è¡¨ç¤º.
             gameClear.SetActive(true);
 
             isEnemySpawn = false;
-            // ƒtƒB[ƒ‹ƒhã‚Ì“G‚ğíœ‚µƒŠƒXƒg‚ğƒŠƒZƒbƒg.
+            // ãƒ•ã‚£ãƒ¼ãƒ«ãƒ‰ä¸Šã®æ•µã‚’å‰Šé™¤ã—ãƒªã‚¹ãƒˆã‚’ãƒªã‚»ãƒƒãƒˆ.
             foreach (EnemyBase e in fieldEnemys)
             {
                 Destroy(e.gameObject);
@@ -200,39 +229,40 @@ public class GameController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒQ[ƒ€ƒI[ƒo[‚ÉƒvƒŒƒCƒ„[‚©‚çŒÄ‚Î‚ê‚é.
+    /// ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼æ™‚ã«ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‹ã‚‰å‘¼ã°ã‚Œã‚‹.
     /// </summary>
     // ---------------------------------------------------------------------
     void OnGameOver()
     {
-        // ƒQ[ƒ€ƒI[ƒo[‚ğ•\¦.
+        isTimer = false;
+        // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼ã‚’è¡¨ç¤º.
         gameOver.SetActive(true);
-        // ƒvƒŒƒCƒ„[‚ğ”ñ•\¦.
+        // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’éè¡¨ç¤º.
         player.gameObject.SetActive(false);
-        // “G‚ÌUŒ‚ƒtƒ‰ƒO‚ğ‰ğœ.
+        // æ•µã®æ”»æ’ƒãƒ•ãƒ©ã‚°ã‚’è§£é™¤.
         foreach (EnemyBase enemy in fieldEnemys) enemy.IsBattle = false;
     }
 
     // ---------------------------------------------------------------------
     /// <summary>
-    /// ƒŠƒgƒ‰ƒCƒ{ƒ^ƒ“ƒNƒŠƒbƒNƒR[ƒ‹ƒoƒbƒN.
+    /// ãƒªãƒˆãƒ©ã‚¤ãƒœã‚¿ãƒ³ã‚¯ãƒªãƒƒã‚¯ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯.
     /// </summary>
     // ---------------------------------------------------------------------
     public void OnRetryButtonClicked()
     {
-        // ƒvƒŒƒCƒ„[ƒŠƒgƒ‰ƒCˆ—.
+        // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ãƒªãƒˆãƒ©ã‚¤å‡¦ç†.
         player.Retry();
-        // “G‚ÌƒŠƒgƒ‰ƒCˆ—.
+        // æ•µã®ãƒªãƒˆãƒ©ã‚¤å‡¦ç†.
         foreach (EnemyBase enemy in fieldEnemys)
         {
             Destroy(enemy.gameObject);
         }
         fieldEnemys.Clear();
-        // ƒvƒŒƒCƒ„[‚ğ•\¦.
+        // ãƒ—ãƒ¬ã‚¤ãƒ¤ãƒ¼ã‚’è¡¨ç¤º.
         player.gameObject.SetActive(true);
-        // ƒQ[ƒ€ƒI[ƒo[‚ğ”ñ•\¦.
+        // ã‚²ãƒ¼ãƒ ã‚ªãƒ¼ãƒãƒ¼ã‚’éè¡¨ç¤º.
         gameOver.SetActive(false);
-        // ƒQ[ƒ€ƒNƒŠƒA‚ğ”ñ•\¦.
+        // ã‚²ãƒ¼ãƒ ã‚¯ãƒªã‚¢ã‚’éè¡¨ç¤º.
         gameClear.SetActive(false);
 
         Init();
