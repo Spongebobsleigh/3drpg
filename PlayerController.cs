@@ -239,6 +239,22 @@ public class PlayerController : MonoBehaviour
 
     // ---------------------------------------------------------------------
     /// <summary>
+    /// 回復処理.
+    /// </summary>
+    /// <param name="healPoint"> 回復量. </param>
+    // ---------------------------------------------------------------------
+    public void OnHeal(int healPoint)
+    {
+        CurrentStatus.Hp += healPoint;
+        Debug.Log("HPが" + healPoint + "回復!!");
+
+        if (CurrentStatus.Hp > DefaultStatus.Hp) CurrentStatus.Hp = DefaultStatus.Hp;
+
+        hpBar.value = CurrentStatus.Hp;
+    }
+
+    // ---------------------------------------------------------------------
+    /// <summary>
     /// 攻撃ボタンクリックコールバック.
     /// </summary>
     // ---------------------------------------------------------------------
