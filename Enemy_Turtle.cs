@@ -3,20 +3,20 @@ using UnityEngine;
 
 // ------------------------------------------------------------
 /// <summary>
-/// EnemyBase‚ğŒp³‚µ‚½“GTurtle.
+/// EnemyBaseã‚’ç¶™æ‰¿ã—ãŸæ•µTurtle.
 /// </summary>
 // ------------------------------------------------------------
 public class Enemy_Turtle : EnemyBase
 {
     [Header("Sub Param")]
-    //! ‰“‹——£UŒ‚ƒRƒ‰ƒCƒ_[ƒR[ƒ‹.
+    //! é è·é›¢æ”»æ’ƒã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚³ãƒ¼ãƒ«.
     [SerializeField] ColliderCallReceiver farAttackCall = null;
-    //! ‰“‹——£UŒ‚ƒŠƒWƒbƒhƒ{ƒfƒB.
+    //! é è·é›¢æ”»æ’ƒãƒªã‚¸ãƒƒãƒ‰ãƒœãƒ‡ã‚£.
     [SerializeField] Rigidbody farAttackRigid = null;
 
-    //! ‹ß‹——£ƒtƒ‰ƒO.
+    //! è¿‘è·é›¢ãƒ•ãƒ©ã‚°.
     bool isNear = true;
-    //! ‰“‹——£UŒ‚ƒRƒ‹[ƒ`ƒ“.
+    //! é è·é›¢æ”»æ’ƒã‚³ãƒ«ãƒ¼ãƒãƒ³.
     Coroutine farAttackCor = null;
 
     protected override void Start()
@@ -34,9 +34,9 @@ public class Enemy_Turtle : EnemyBase
 
     // ------------------------------------------------------------
     /// <summary>
-    /// ü•ÓƒŒ[ƒ_[ƒRƒ‰ƒCƒ_[ƒXƒeƒCƒCƒxƒ“ƒgƒR[ƒ‹.
+    /// å‘¨è¾ºãƒ¬ãƒ¼ãƒ€ãƒ¼ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¹ãƒ†ã‚¤ã‚¤ãƒ™ãƒ³ãƒˆã‚³ãƒ¼ãƒ«.
     /// </summary>
-    /// <param name="other"> Ú‹ßƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="other"> æ¥è¿‘ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // ------------------------------------------------------------
     protected override void OnAroundTriggerStay(Collider other)
     {
@@ -45,7 +45,7 @@ public class Enemy_Turtle : EnemyBase
         if (other.gameObject.tag == "Player")
         {
             var sqrMag = (this.transform.position - other.gameObject.transform.position).sqrMagnitude;
-            if (sqrMag > 3f) isNear = false;@// ’l‚Í“K‹X’²®‚µ‚Ä‚­‚¾‚³‚¢.
+            if (sqrMag > 3f) isNear = false;ã€€// å€¤ã¯é©å®œèª¿æ•´ã—ã¦ãã ã•ã„.
             else isNear = true;
 
         }
@@ -53,7 +53,7 @@ public class Enemy_Turtle : EnemyBase
 
     // ----------------------------------------------------------
     /// <summary>
-    /// UŒ‚HitƒAƒjƒ[ƒVƒ‡ƒ“ƒR[ƒ‹.
+    /// æ”»æ’ƒHitã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     protected override void Anim_AttackHit()
@@ -65,7 +65,7 @@ public class Enemy_Turtle : EnemyBase
 
             var dir = (currentAttackTarget.position - this.transform.position);
             dir.y = 0;
-            farAttackRigid.AddForce(dir * 100f);@// 100‚Í“K‹X’²®A•K—v‚È‚ç•Ï”‚É‚µ‚Ü‚µ‚å‚¤B
+            farAttackRigid.AddForce(dir * 100f);ã€€// 100ã¯é©å®œèª¿æ•´ã€å¿…è¦ãªã‚‰å¤‰æ•°ã«ã—ã¾ã—ã‚‡ã†ã€‚
 
             if (farAttackCor != null)
             {
@@ -79,7 +79,7 @@ public class Enemy_Turtle : EnemyBase
 
     // ----------------------------------------------------------
     /// <summary>
-    /// UŒ‚ƒAƒjƒ[ƒVƒ‡ƒ“I—¹ƒR[ƒ‹.
+    /// æ”»æ’ƒã‚¢ãƒ‹ãƒ¡ãƒ¼ã‚·ãƒ§ãƒ³çµ‚äº†æ™‚ã‚³ãƒ¼ãƒ«.
     /// </summary>
     // ----------------------------------------------------------
     protected override void Anim_AttackEnd()
@@ -89,9 +89,9 @@ public class Enemy_Turtle : EnemyBase
 
     // ------------------------------------------------------------
     /// <summary>
-    /// ‰“‹——£UŒ‚ƒRƒ‰ƒCƒ_[ƒGƒ“ƒ^[ƒR[ƒ‹.
+    /// é è·é›¢æ”»æ’ƒã‚³ãƒ©ã‚¤ãƒ€ãƒ¼ã‚¨ãƒ³ã‚¿ãƒ¼ã‚³ãƒ¼ãƒ«.
     /// </summary>
-    /// <param name="col"> ÚGƒRƒ‰ƒCƒ_[. </param>
+    /// <param name="col"> æ¥è§¦ã‚³ãƒ©ã‚¤ãƒ€ãƒ¼. </param>
     // ------------------------------------------------------------
     void OnFarAttackEnter(Collider col)
     {
@@ -112,7 +112,7 @@ public class Enemy_Turtle : EnemyBase
 
     // ------------------------------------------------------------
     /// <summary>
-    /// ŠÔŒo‰ß‚Å©“®íœ.
+    /// æ™‚é–“çµŒéã§è‡ªå‹•å‰Šé™¤.
     /// </summary>
     // ------------------------------------------------------------
     IEnumerator AutoErase()
@@ -123,7 +123,7 @@ public class Enemy_Turtle : EnemyBase
 
     // ------------------------------------------------------------
     /// <summary>
-    /// ‰“‹——£UŒ‚‚ğƒŠƒZƒbƒg.
+    /// é è·é›¢æ”»æ’ƒã‚’ãƒªã‚»ãƒƒãƒˆ.
     /// </summary>
     // ------------------------------------------------------------
     void ResetFarAttack()
